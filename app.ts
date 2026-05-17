@@ -1,73 +1,139 @@
-/** 
- * --- OOP STRUKTURA ---
- */
-
-// ABSTRAKTNÍ TŘÍDA
+// Abstraktní bázová třída pro položky servisu
 abstract class PolozkaServisu {
-    // ATRIBUTY
-    constructor(protected nazev: string, protected zakladniCena: number) {}
-    
-    // ABSTRAKTNÍ METODA
+    // Chráněné atributy třídy
+    protected _nazev: string;
+    protected _zakladniCena: number;
+
+    // Konstruktor s validací vstupních dat
+    constructor(nazev: string, zakladniCena: number) {
+        if (!nazev || nazev.trim() === "") {
+            throw new Error("Název položky nesmí být prázdný.");
+        }
+        if (zakladniCena < 0) {
+            throw new Error(`Cena u položky "${nazev}" nesmí být záporná.`);
+        }
+        this._nazev = nazev;
+        this._zakladniCena = zakladniCena;
+    }
+
+    // Veřejná metoda pro získání názvu
+    public getNazev(): string {
+        return this._nazev;
+    }
+
+    // Předpis abstraktní metody pro výpočet ceny
     public abstract vypocitejCenu(): number;
-    
-    public getNazev(): string { return this.nazev; }
 }
 
-// KONKRÉTNÍ POTOMEK (Práce)
+// Třída reprezentující odvedenou práci (potomek PolozkaServisu)
 class Prace extends PolozkaServisu {
-    constructor(nazev: string, sazba: number, private hodiny: number) {
-        super(nazev, sazba);
+    // Soukromý atribut pro hodiny
+    private _pocetHodin: number;
+
+    // Konstruktor třídy Prace s validací hodin
+    constructor(nazev: string, hodinovaSazba: number, pocetHodin: number) {
+        super(nazev, hodinovaSazba);
+        if (pocetHodin <= 0) {
+            throw new Error(`Počet hodin u úkonu "${nazev}" musí být větší než 0.`);
+        }
+        this._pocetHodin = pocetHodin;
     }
 
-    // VÝPOČET CENY
-    public vypocitejCenu(): number { 
-        return this.zakladniCena * this.hodiny; 
+    // Implementace výpočtu ceny pro práci (sazba * hodiny)
+    public vypocitejCenu(): number {
+        return this._zakladniCena * this._pocetHodin;
     }
 }
 
-// KONKRÉTNÍ POTOMEK (Materiál)
+// Třída reprezentující použitý materiál (potomek PolozkaServisu)
 class Material extends PolozkaServisu {
-    constructor(nazev: string, cenaKus: number, private mnozstvi: number) {
+    // Soukromé atributy pro množství a marži
+    private _mnozstvi: number;
+    private _marze: number;
+
+    // Konstruktor třídy Material s validací množství a marže
+    constructor(nazev: string, cenaKus: number, mnozstvi: number, marze: number) {
         super(nazev, cenaKus);
+        if (mnozstvi <= 0) {
+            throw new Error(`Množství u materiálu "${nazev}" musí být větší než 0.`);
+        }
+        if (marze < 1) {
+            throw new Error(`Marže u materiálu "${nazev}" nemůže být menší než 1.0.`);
+        }
+        this._mnozstvi = mnozstvi;
+        this._marze = marze;
     }
 
-    // VÝPOČET CENY
-    public vypocitejCenu(): number { 
-        return (this.zakladniCena * 1.2) * this.mnozstvi; 
+    // Implementace výpočtu ceny pro materiál (cena * množství * marže)
+    public vypocitejCenu(): number {
+        return this._zakladniCena * this._mnozstvi * this._marze;
     }
 }
-import { surovaData } from './data';
 
-/** 
- * --- LOGIKA A PROPOJENÍ ---
- */
+// Třída pro správu celé zakázky a kolekce položek
+class Zakazka {
+    // Soukromé pole pro ukládání instancí položek
+    private seznamPolozek: PolozkaServisu[] = [];
 
-// KOLEKCE
-const seznamPolozek: PolozkaServisu[] = [];
-
-const addBtn = document.getElementById('addBtn') as HTMLButtonElement;
-
-// EVENT LISTENER
-addBtn.addEventListener('click', () => {
-    const typ = (document.getElementById('typ') as HTMLSelectElement).value;
-    const nazev = (document.getElementById('nazev') as HTMLInputElement).value;
-    const cena = parseFloat((document.getElementById('cena') as HTMLInputElement).value);
-    const mnozstvi = parseFloat((document.getElementById('mnozstvi') as HTMLInputElement).value);
-
-    // VALIDACE
-    if (!nazev || isNaN(cena) || isNaN(mnozstvi)) {
-        alert("Vyplň všechna pole!");
-        return;
+    // Metoda pro přidání položky do pole
+    public pridatPolozku(polozka: PolozkaServisu): void {
+        this.seznamPolozek.push(polozka);
     }
 
-    // INSTANCIACE
-    let novaPolozka: PolozkaServisu;
-    if (typ === "prace") {
-        novaPolozka = new Prace(nazev, cena, mnozstvi);
-    } else {
-        novaPolozka = new Material(nazev, cena, mnozstvi);
+    // Veřejná metoda pro získání seznamu položek v konzoli
+    public getSeznamPolozek(): PolozkaServisu[] {
+        return this.seznamPolozek;
     }
 
-    seznamPolozek.push(novaPolozka);
-    vykresliTabulku(); // Tahle funkce se dopíše v dalším kroku
-});
+    // Metoda pro výpočet sumy celé zakázky protnutím všech položek
+    public getCelkovaCena(): number {
+        let celkem = 0;
+        for (const polozka of this.seznamPolozek) {
+            celkem += polozka.vypocitejCenu();
+        }
+        return celkem;
+    }
+
+    // Metoda pro formátovaný textový výpis do konzole prohlížeče
+    public renderTabulky(): void {
+        console.log("%c=== ROZPIS SERVISNÍ ZAKÁZKY ===", "font-weight: bold; color: #007bff;");
+        console.log("----------------------------------------------------------------");
+        
+        this.seznamPolozek.forEach((polozka, index) => {
+            const typ = polozka instanceof Prace ? "Prace" : "Material";
+            console.log(`${index + 1}. [${typ}] ${polozka.getNazev()} -> Cena: ${polozka.vypocitejCenu().toFixed(2)} Kč`);
+        });
+
+        console.log("----------------------------------------------------------------");
+        console.log(`%cCELKOVÁ CENA ZAKÁZKY: ${this.getCelkovaCena().toFixed(2)} Kč`, "font-weight: bold; color: #28a745; font-size: 14px;");
+    }
+}
+
+// Blok pro zpracování dat a spuštění testu v konzoli
+try {
+    // Vytvoření instance zakázky
+    const novaZakazka = new Zakazka();
+
+    console.log("Úspěšně načítám tvých 20 položek z data.ts...");
+
+    // Cyklus pro převod surových dat z data.ts na objekty tříd
+    surovaDataZakazky.forEach((data: any) => {
+        if (data.typ === "prace") {
+            const hrac = new Prace(data.nazev, data.cena, data.hodiny);
+            novaZakazka.pridatPolozku(hrac);
+        } else if (data.typ === "material") {
+            const mat = new Material(data.nazev, data.cena, data.mnozstvi, data.marze);
+            novaZakazka.pridatPolozku(mat);
+        }
+    });
+
+    // Spuštění výpisu tabulky do konzole
+    novaZakazka.renderTabulky();
+
+    // Zpřístupnění objektu zakázky pro globální testování v konzoli pod názvem 'mojeZakazka'
+    (window as any).mojeZakazka = novaZakazka;
+
+} catch (error: any) {
+    // Odchycení a výpis případné chyby z validací
+    console.error("%cChyba při validaci dat v aplikaci:", "color: red; font-weight: bold;", error.message);
+}

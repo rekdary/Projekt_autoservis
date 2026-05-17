@@ -1,9 +1,6 @@
-/**
- * --- DATOVÝ ČÍSELNÍK ---
- */
-
-export const dataAutoservisu = [
-    // PRÁCE
+// Ceník
+const surovaDataZakazky = [
+   // PRÁCE
     { typ: "prace", nazev: "Výměna motorového oleje", cena: 450, hodiny: 1 },
     { typ: "prace", nazev: "Výměna brzdových destiček", cena: 600, hodiny: 2.5 },
     { typ: "prace", nazev: "Diagnostika elektroniky", cena: 850, hodiny: 1.5 },

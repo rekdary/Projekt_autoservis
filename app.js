@@ -1,67 +1,118 @@
-/**
- * --- OOP STRUKTURA ---
- */
-// ABSTRAKTNÍ TŘÍDA
+"use strict";
+// Abstraktní bázová třída pro položky servisu
 class PolozkaServisu {
-    nazev;
-    zakladniCena;
-    // ATRIBUTY
+    // Chráněné atributy třídy
+    _nazev;
+    _zakladniCena;
+    // Konstruktor s validací vstupních dat
     constructor(nazev, zakladniCena) {
-        this.nazev = nazev;
-        this.zakladniCena = zakladniCena;
+        if (!nazev || nazev.trim() === "") {
+            throw new Error("Název položky nesmí být prázdný.");
+        }
+        if (zakladniCena < 0) {
+            throw new Error(`Cena u položky "${nazev}" nesmí být záporná.`);
+        }
+        this._nazev = nazev;
+        this._zakladniCena = zakladniCena;
     }
-    getNazev() { return this.nazev; }
+    // Veřejná metoda pro získání názvu
+    getNazev() {
+        return this._nazev;
+    }
 }
-// KONKRÉTNÍ POTOMEK (Práce)
+// Třída reprezentující odvedenou práci (potomek PolozkaServisu)
 class Prace extends PolozkaServisu {
-    hodiny;
-    constructor(nazev, sazba, hodiny) {
-        super(nazev, sazba);
-        this.hodiny = hodiny;
+    // Soukromý atribut pro hodiny
+    _pocetHodin;
+    // Konstruktor třídy Prace s validací hodin
+    constructor(nazev, hodinovaSazba, pocetHodin) {
+        super(nazev, hodinovaSazba);
+        if (pocetHodin <= 0) {
+            throw new Error(`Počet hodin u úkonu "${nazev}" musí být větší než 0.`);
+        }
+        this._pocetHodin = pocetHodin;
     }
-    // VÝPOČET CENY
+    // Implementace výpočtu ceny pro práci (sazba * hodiny)
     vypocitejCenu() {
-        return this.zakladniCena * this.hodiny;
+        return this._zakladniCena * this._pocetHodin;
     }
 }
-// KONKRÉTNÍ POTOMEK (Materiál)
+// Třída reprezentující použitý materiál (potomek PolozkaServisu)
 class Material extends PolozkaServisu {
-    mnozstvi;
-    constructor(nazev, cenaKus, mnozstvi) {
+    // Soukromé atributy pro množství a marži
+    _mnozstvi;
+    _marze;
+    // Konstruktor třídy Material s validací množství a marže
+    constructor(nazev, cenaKus, mnozstvi, marze) {
         super(nazev, cenaKus);
-        this.mnozstvi = mnozstvi;
+        if (mnozstvi <= 0) {
+            throw new Error(`Množství u materiálu "${nazev}" musí být větší než 0.`);
+        }
+        if (marze < 1) {
+            throw new Error(`Marže u materiálu "${nazev}" nemůže být menší než 1.0.`);
+        }
+        this._mnozstvi = mnozstvi;
+        this._marze = marze;
     }
-    // VÝPOČET CENY
+    // Implementace výpočtu ceny pro materiál (cena * množství * marže)
     vypocitejCenu() {
-        return (this.zakladniCena * 1.2) * this.mnozstvi;
+        return this._zakladniCena * this._mnozstvi * this._marze;
     }
 }
-/**
- * --- LOGIKA A PROPOJENÍ ---
- */
-// KOLEKCE
-const seznamPolozek = [];
-const addBtn = document.getElementById('addBtn');
-// EVENT LISTENER
-addBtn.addEventListener('click', () => {
-    const typ = document.getElementById('typ').value;
-    const nazev = document.getElementById('nazev').value;
-    const cena = parseFloat(document.getElementById('cena').value);
-    const mnozstvi = parseFloat(document.getElementById('mnozstvi').value);
-    // VALIDACE
-    if (!nazev || isNaN(cena) || isNaN(mnozstvi)) {
-        alert("Vyplň všechna pole!");
-        return;
+// Třída pro správu celé zakázky a kolekce položek
+class Zakazka {
+    // Soukromé pole pro ukládání instancí položek
+    seznamPolozek = [];
+    // Metoda pro přidání položky do pole
+    pridatPolozku(polozka) {
+        this.seznamPolozek.push(polozka);
     }
-    // INSTANCIACE
-    let novaPolozka;
-    if (typ === "prace") {
-        novaPolozka = new Prace(nazev, cena, mnozstvi);
+    // Veřejná metoda pro získání seznamu položek v konzoli
+    getSeznamPolozek() {
+        return this.seznamPolozek;
     }
-    else {
-        novaPolozka = new Material(nazev, cena, mnozstvi);
+    // Metoda pro výpočet sumy celé zakázky protnutím všech položek
+    getCelkovaCena() {
+        let celkem = 0;
+        for (const polozka of this.seznamPolozek) {
+            celkem += polozka.vypocitejCenu();
+        }
+        return celkem;
     }
-    seznamPolozek.push(novaPolozka);
-    vykresliTabulku(); // Tahle funkce se dopíše v dalším kroku
-});
-export {};
+    // Metoda pro formátovaný textový výpis do konzole prohlížeče
+    renderTabulky() {
+        console.log("%c=== ROZPIS SERVISNÍ ZAKÁZKY ===", "font-weight: bold; color: #007bff;");
+        console.log("----------------------------------------------------------------");
+        this.seznamPolozek.forEach((polozka, index) => {
+            const typ = polozka instanceof Prace ? "Prace" : "Material";
+            console.log(`${index + 1}. [${typ}] ${polozka.getNazev()} -> Cena: ${polozka.vypocitejCenu().toFixed(2)} Kč`);
+        });
+        console.log("----------------------------------------------------------------");
+        console.log(`%cCELKOVÁ CENA ZAKÁZKY: ${this.getCelkovaCena().toFixed(2)} Kč`, "font-weight: bold; color: #28a745; font-size: 14px;");
+    }
+}
+// Blok pro zpracování dat a spuštění testu v konzoli
+try {
+    // Vytvoření instance zakázky
+    const novaZakazka = new Zakazka();
+    console.log("Úspěšně načítám tvých 20 položek z data.ts...");
+    // Cyklus pro převod surových dat z data.ts na objekty tříd
+    surovaDataZakazky.forEach((data) => {
+        if (data.typ === "prace") {
+            const hrac = new Prace(data.nazev, data.cena, data.hodiny);
+            novaZakazka.pridatPolozku(hrac);
+        }
+        else if (data.typ === "material") {
+            const mat = new Material(data.nazev, data.cena, data.mnozstvi, data.marze);
+            novaZakazka.pridatPolozku(mat);
+        }
+    });
+    // Spuštění výpisu tabulky do konzole
+    novaZakazka.renderTabulky();
+    // Zpřístupnění objektu zakázky pro globální testování v konzoli pod názvem 'mojeZakazka'
+    window.mojeZakazka = novaZakazka;
+}
+catch (error) {
+    // Odchycení a výpis případné chyby z validací
+    console.error("%cChyba při validaci dat v aplikaci:", "color: red; font-weight: bold;", error.message);
+}
