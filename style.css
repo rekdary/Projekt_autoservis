@@ -1,0 +1,302 @@
+/* Základní nastavení vzhledu */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f4f8;
+    color: #1e293b;
+    line-height: 1.5;
+    padding: 20px;
+}
+
+/* Nadpis a podnadpis */
+header {
+    text-align: center;
+    margin-bottom: 35px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+header h1 {
+    color: #1e3a8a;
+    font-size: 2.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+header .subtitle {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Hlavní rozvržení do dvou sloupců pomocí Gridu na desktopu */
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+@media (min-width: 992px) {
+    .container {
+        grid-template-columns: 400px 1fr;
+    }
+}
+
+/* Styly pro jednotlivé panely (karty) */
+.card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    color: #0f172a;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    border-left: 5px solid #2563eb;
+    padding-left: 10px;
+    text-transform: uppercase;
+}
+
+/* Formuláře a vstupy */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+input[type="text"], select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background-color: #f8fafc;
+}
+
+input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: #2563eb;
+    background-color: #ffffff;
+}
+
+/* Tlačítka */
+button {
+    background-color: #2563eb;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.15s;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+}
+
+/* Tlačítko pro zobrazení detailu v tabulce */
+.btn-small {
+    background-color: #475569;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    width: auto;
+}
+
+.btn-small:hover {
+    background-color: #334155;
+}
+
+/* Skrytí elementů */
+.hidden {
+    display: none !important;
+}
+
+/* Tabulky */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+tr:hover {
+    background-color: #f8fafc;
+}
+
+.text-center {
+    text-align: center;
+    color: #94a3b8;
+    padding: 20px;
+}
+
+/* Označení typů položek */
+.badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.badge-prace {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-material {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* Výsledný cenový přehled */
+.celkova-cena-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #dcfce7;
+    border: 1px solid #bbf7d0;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.celkova-cena-box span {
+    font-weight: 600;
+    color: #14532d;
+}
+
+.celkova-cena-box strong {
+    font-size: 1.4rem;
+    color: #166534;
+}
+/* Úprava pro seznam s vícenásobným výběrem */
+select[multiple] {
+    height: auto;
+    padding: 5px;
+}
+
+select[multiple] option {
+    padding: 8px 10px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Zvýraznění vybraných položek */
+select[multiple] option:checked {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+/* Obal pro akční tlačítka vedle sebe v tabulce */
+.akce-tlacitka {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Nové červené tlačítko pro dokončení/smazání zakázky */
+.btn-danger {
+    background-color: #ef4444;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto;
+    transition: background-color 0.15s;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+/* Rozložení ceníku do dvou sloupců s checkboxy */
+.ceniky-rozlozeni {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.kategorie-ceniku h3 {
+    font-size: 0.95rem;
+    color: #334155;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 5px;
+}
+
+.checkbox-polozka {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    font-weight: normal;
+    font-size: 0.9rem;
+    color: #475569;
+    cursor: pointer;
+}
+
+/* Odsazení a velikost samotného čtverečku checkboxu */
+.checkbox-polozka input[type="checkbox"] {
+    margin-right: 10px;
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox-polozka:hover {
+    color: #2563eb;
+}
+
+/* Na mobilních zařízeních dáme sloupce pod sebe */
+@media (max-width: 600px) {
+    .ceniky-rozlozeni {
+        grid-template-columns: 1fr;
+        max-height: 400px;
+    }
+}

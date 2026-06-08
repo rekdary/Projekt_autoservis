@@ -19,6 +19,10 @@ class PolozkaServisu {
     getNazev() {
         return this._nazev;
     }
+    // Veřejná metoda pro získání základní jednotkové ceny
+    getZakladniCena() {
+        return this._zakladniCena;
+    }
 }
 // Třída reprezentující odvedenou práci (potomek PolozkaServisu)
 class Prace extends PolozkaServisu {
@@ -35,6 +39,10 @@ class Prace extends PolozkaServisu {
     // Implementace výpočtu ceny pro práci (sazba * hodiny)
     vypocitejCenu() {
         return this._zakladniCena * this._pocetHodin;
+    }
+    // Navrácení formátovaného času
+    getFormatovaneMnozstvi() {
+        return `${this._pocetHodin} hod`;
     }
 }
 // Třída reprezentující použitý materiál (potomek PolozkaServisu)
@@ -58,61 +66,222 @@ class Material extends PolozkaServisu {
     vypocitejCenu() {
         return this._zakladniCena * this._mnozstvi * this._marze;
     }
+    // Navrácení formátovaného množství včetně procentuální přirážky marže
+    getFormatovaneMnozstvi() {
+        const procentoMarze = Math.round((this._marze - 1) * 100);
+        return `${this._mnozstvi} ks (marže ${procentoMarze}%)`;
+    }
 }
-// Třída pro správu celé zakázky a kolekce položek
+// Třída pro správu jedné zakázky konkrétního automobilu
 class Zakazka {
-    // Soukromé pole pro ukládání instancí položek
-    seznamPolozek = [];
-    // Metoda pro přidání položky do pole
-    pridatPolozku(polozka) {
-        this.seznamPolozek.push(polozka);
+    // Soukromé atributy instancí
+    _nazevAuta;
+    _seznamPolozek = [];
+    constructor(nazevAuta) {
+        if (!nazevAuta || nazevAuta.trim() === "") {
+            throw new Error("Název automobilu nesmí být prázdný.");
+        }
+        this._nazevAuta = nazevAuta;
     }
-    // Veřejná metoda pro získání seznamu položek v konzoli
+    // Getter pro název auta
+    getNazevAuta() {
+        return this._nazevAuta;
+    }
+    // Getter pro pole všech položek navázaných na auto
     getSeznamPolozek() {
-        return this.seznamPolozek;
+        return this._seznamPolozek;
     }
-    // Metoda pro výpočet sumy celé zakázky protnutím všech položek
+    // Metoda pro přidání položky do pole servisu
+    pridatPolozku(polozka) {
+        this._seznamPolozek.push(polozka);
+    }
+    // Metoda pro výpočet sumy celé zakázky (Využití Polymorfismu)
     getCelkovaCena() {
         let celkem = 0;
-        for (const polozka of this.seznamPolozek) {
+        for (const polozka of this._seznamPolozek) {
             celkem += polozka.vypocitejCenu();
         }
         return celkem;
     }
-    // Metoda pro formátovaný textový výpis do konzole prohlížeče
-    renderTabulky() {
-        console.log("%c=== ROZPIS SERVISNÍ ZAKÁZKY ===", "font-weight: bold; color: #007bff;");
-        console.log("----------------------------------------------------------------");
-        this.seznamPolozek.forEach((polozka, index) => {
-            const typ = polozka instanceof Prace ? "Prace" : "Material";
-            console.log(`${index + 1}. [${typ}] ${polozka.getNazev()} -> Cena: ${polozka.vypocitejCenu().toFixed(2)} Kč`);
-        });
-        console.log("----------------------------------------------------------------");
-        console.log(`%cCELKOVÁ CENA ZAKÁZKY: ${this.getCelkovaCena().toFixed(2)} Kč`, "font-weight: bold; color: #28a745; font-size: 14px;");
+    // Pomocná metoda, která vygeneruje textový seznam přidaných prací pro hlavní přehledovou tabulku
+    getZjednodusenyPrehledUkonu() {
+        if (this._seznamPolozek.length === 0) {
+            return "Žádné zadané úkony";
+        }
+        return this._seznamPolozek.map(p => p.getNazev()).join(", ");
     }
 }
-// Blok pro zpracování dat a spuštění testu v konzoli
-try {
-    // Vytvoření instance zakázky
-    const novaZakazka = new Zakazka();
-    console.log("Úspěšně načítám tvých 20 položek z data.ts...");
-    // Cyklus pro převod surových dat z data.ts na objekty tříd
-    surovaDataZakazky.forEach((data) => {
-        if (data.typ === "prace") {
-            const hrac = new Prace(data.nazev, data.cena, data.hodiny);
-            novaZakazka.pridatPolozku(hrac);
+// --- LOGIKA ŘÍZENÍ APLIKACE A OPERACE NAD DOM ---
+const globalniSeznamZakazek = [];
+let indexZobrazenehoAuta = -1;
+document.addEventListener("DOMContentLoaded", () => {
+    const formAuto = document.getElementById("form-auto");
+    const formPolozka = document.getElementById("form-polozka");
+    const vyberAutaPolozka = document.getElementById("vyber-auta-polozka");
+    // Kontejner pro výpis ucelených servisních balíčků
+    const checkboxyUkony = document.getElementById("checkboxy-ukony");
+    const vystupSeznamAut = document.getElementById("vystup-seznam-aut");
+    const sekceDetailAuta = document.getElementById("sekce-detail-auta");
+    // Inicializační naplnění checkboxů z datového pole
+    if (typeof surovaDataZakazky !== "undefined" && Array.isArray(surovaDataZakazky)) {
+        surovaDataZakazky.forEach((ukon, index) => {
+            const label = document.createElement("label");
+            label.className = "checkbox-polozka";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = index.toString();
+            checkbox.name = "polozka-ceniku";
+            label.appendChild(checkbox);
+            // Výpis názvu úkonu pro uživatele
+            label.appendChild(document.createTextNode(` ${ukon.nazevUkonu}`));
+            checkboxyUkony.appendChild(label);
+        });
+    }
+    function smazatZakazku(index) {
+        const autoKeSmazani = globalniSeznamZakazek[index];
+        const potvrzeni = confirm(`Opravdu chcete označit opravu vozidla "${autoKeSmazani.getNazevAuta()}" jako dokončenou a smazat ji ze systému?`);
+        if (potvrzeni) {
+            globalniSeznamZakazek.splice(index, 1);
+            if (index === indexZobrazenehoAuta) {
+                sekceDetailAuta.classList.add("hidden");
+                indexZobrazenehoAuta = -1;
+            }
+            else if (index < indexZobrazenehoAuta) {
+                indexZobrazenehoAuta--;
+            }
+            prekresliSystem();
         }
-        else if (data.typ === "material") {
-            const mat = new Material(data.nazev, data.cena, data.mnozstvi, data.marze);
-            novaZakazka.pridatPolozku(mat);
+    }
+    function prekresliSystem() {
+        vyberAutaPolozka.innerHTML = '<option value="" disabled selected>-- Vyberte registrované auto --</option>';
+        globalniSeznamZakazek.forEach((zakazka, index) => {
+            const option = document.createElement("option");
+            option.value = index.toString();
+            option.text = zakazka.getNazevAuta();
+            vyberAutaPolozka.appendChild(option);
+        });
+        if (globalniSeznamZakazek.length === 0) {
+            vystupSeznamAut.innerHTML = '<tr><td colspan="4" class="text-center">V systému aktuálně nejsou žádná vozidla.</td></tr>';
+            return;
+        }
+        vystupSeznamAut.innerHTML = "";
+        globalniSeznamZakazek.forEach((zakazka, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${zakazka.getNazevAuta()}</strong></td>
+                <td>${zakazka.getZjednodusenyPrehledUkonu()}</td>
+                <td><strong>${zakazka.getCelkovaCena().toFixed(2)} Kč</strong></td>
+                <td>
+                    <div class="akce-tlacitka">
+                        <button type="button" class="btn-small btn-detail" data-index="${index}">Zobrazit detail</button>
+                        <button type="button" class="btn-danger btn-smazat" data-index="${index}">Hotovo</button>
+                    </div>
+                </td>
+            `;
+            vystupSeznamAut.appendChild(tr);
+        });
+        const tlacitkaDetailu = vystupSeznamAut.querySelectorAll(".btn-detail");
+        tlacitkaDetailu.forEach(tlacitko => {
+            tlacitko.addEventListener("click", (e) => {
+                const cil = e.target;
+                const index = parseInt(cil.getAttribute("data-index") || "-1");
+                zobrazDetailKalkulaceAuta(index);
+            });
+        });
+        const tlacitkaSmazani = vystupSeznamAut.querySelectorAll(".btn-smazat");
+        tlacitkaSmazani.forEach(tlacitko => {
+            tlacitko.addEventListener("click", (e) => {
+                const cil = e.target;
+                const index = parseInt(cil.getAttribute("data-index") || "-1");
+                smazatZakazku(index);
+            });
+        });
+    }
+    function zobrazDetailKalkulaceAuta(index) {
+        if (index < 0 || index >= globalniSeznamZakazek.length)
+            return;
+        indexZobrazenehoAuta = index;
+        const vybraneAuto = globalniSeznamZakazek[index];
+        const detailNazevAuta = document.getElementById("detail-nazev-auta");
+        const vystupDetailPolozek = document.getElementById("vystup-detail-polozek");
+        const detailCelkovaCena = document.getElementById("detail-celkova-cena");
+        detailNazevAuta.innerText = vybraneAuto.getNazevAuta();
+        vystupDetailPolozek.innerHTML = "";
+        const polozkyAuta = vybraneAuto.getSeznamPolozek();
+        if (polozkyAuta.length === 0) {
+            vystupDetailPolozek.innerHTML = '<tr><td colspan="5" class="text-center">Toto auto nemá přiřazené žádné položky.</td></tr>';
+        }
+        else {
+            polozkyAuta.forEach(polozka => {
+                const tr = document.createElement("tr");
+                const jePrace = polozka instanceof Prace;
+                const typText = jePrace ? "Práce" : "Materiál";
+                const badgeClass = jePrace ? "badge badge-prace" : "badge badge-material";
+                tr.innerHTML = `
+                    <td><span class="${badgeClass}">${typText}</span></td>
+                    <td>${polozka.getNazev()}</td>
+                    <td>${polozka.getZakladniCena().toFixed(2)} Kč</td>
+                    <td>${polozka.getFormatovaneMnozstvi()}</td>
+                    <td><strong>${polozka.vypocitejCenu().toFixed(2)} Kč</strong></td>
+                `;
+                vystupDetailPolozek.appendChild(tr);
+            });
+        }
+        detailCelkovaCena.innerText = `${vybraneAuto.getCelkovaCena().toFixed(2)} Kč`;
+        sekceDetailAuta.classList.remove("hidden");
+    }
+    formAuto.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const inputAutoNazev = document.getElementById("auto-nazev");
+        try {
+            const novaZakazka = new Zakazka(inputAutoNazev.value);
+            globalniSeznamZakazek.push(novaZakazka);
+            inputAutoNazev.value = "";
+            prekresliSystem();
+        }
+        catch (err) {
+            alert("Chyba při registraci vozidla: " + err.message);
         }
     });
-    // Spuštění výpisu tabulky do konzole
-    novaZakazka.renderTabulky();
-    // Zpřístupnění objektu zakázky pro globální testování v konzoli pod názvem 'mojeZakazka'
-    window.mojeZakazka = novaZakazka;
-}
-catch (error) {
-    // Odchycení a výpis případné chyby z validací
-    console.error("%cChyba při validaci dat v aplikaci:", "color: red; font-weight: bold;", error.message);
-}
+    // PŘEPRACOVANÉ: Čtení komplexních úkonů a automatické doplňování materiálu
+    formPolozka.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const indexAuta = parseInt(vyberAutaPolozka.value);
+        if (isNaN(indexAuta)) {
+            alert("Prosím vyberte vozidlo.");
+            return;
+        }
+        const vybraneCheckboxy = document.querySelectorAll('input[name="polozka-ceniku"]:checked');
+        if (vybraneCheckboxy.length === 0) {
+            alert("Musíte zaškrtnout alespoň jeden servisní úkon.");
+            return;
+        }
+        const vybraneAuto = globalniSeznamZakazek[indexAuta];
+        try {
+            // Projití všech vybraných úkonů z formuláře
+            vybraneCheckboxy.forEach(checkbox => {
+                const indexCeniku = parseInt(checkbox.value);
+                const dataUkonu = surovaDataZakazky[indexCeniku];
+                // 1. Vytvoření a přidání objektu pro čistou PRÁCI
+                const novaPrace = new Prace(dataUkonu.prace.nazev, dataUkonu.prace.cena, dataUkonu.prace.hodiny);
+                vybraneAuto.pridatPolozku(novaPrace);
+                // 2. Cyklus pro automatické přidání veškerého navázaného MATERIÁLU
+                if (dataUkonu.material && dataUkonu.material.length > 0) {
+                    dataUkonu.material.forEach((mat) => {
+                        const novyMaterial = new Material(mat.nazev, mat.cena, mat.mnozstvi, mat.marze);
+                        vybraneAuto.pridatPolozku(novyMaterial);
+                    });
+                }
+            });
+            prekresliSystem();
+            if (indexAuta === indexZobrazenehoAuta) {
+                zobrazDetailKalkulaceAuta(indexAuta);
+            }
+            // Odškrtnutí po uložení
+            vybraneCheckboxy.forEach(cb => cb.checked = false);
+        }
+        catch (err) {
+            alert("Chyba při přiřazování položky: " + err.message);
+        }
+    });
+});
