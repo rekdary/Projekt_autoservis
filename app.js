@@ -1,10 +1,10 @@
 "use strict";
-// Abstraktní bázová třída pro položky servisu
+// Bázová abstraktní třída pro položky
 class PolozkaServisu {
-    // Chráněné atributy třídy
+    // Chráněné proměnné pro název a základní cenu
     _nazev;
     _zakladniCena;
-    // Konstruktor s validací vstupních dat
+    // Konstruktor s kontrolou prázdného názvu a záporné ceny
     constructor(nazev, zakladniCena) {
         if (!nazev || nazev.trim() === "") {
             throw new Error("Název položky nesmí být prázdný.");
@@ -15,20 +15,20 @@ class PolozkaServisu {
         this._nazev = nazev;
         this._zakladniCena = zakladniCena;
     }
-    // Veřejná metoda pro získání názvu
+    // Metoda pro získání názvu položky
     getNazev() {
         return this._nazev;
     }
-    // Veřejná metoda pro získání základní jednotkové ceny
+    // Metoda pro získání základní ceny
     getZakladniCena() {
         return this._zakladniCena;
     }
 }
-// Třída reprezentující odvedenou práci (potomek PolozkaServisu)
+// Třída pro práci (dědí z PolozkaServisu)
 class Prace extends PolozkaServisu {
-    // Soukromý atribut pro hodiny
+    // Proměnná pro počet odpracovaných hodin
     _pocetHodin;
-    // Konstruktor třídy Prace s validací hodin
+    // Konstruktor pro práci s kontrolou hodin
     constructor(nazev, hodinovaSazba, pocetHodin) {
         super(nazev, hodinovaSazba);
         if (pocetHodin <= 0) {
@@ -36,21 +36,21 @@ class Prace extends PolozkaServisu {
         }
         this._pocetHodin = pocetHodin;
     }
-    // Implementace výpočtu ceny pro práci (sazba * hodiny)
+    // Výpočet výsledné ceny práce
     vypocitejCenu() {
         return this._zakladniCena * this._pocetHodin;
     }
-    // Navrácení formátovaného času
+    // Formátování textu pro hodiny
     getFormatovaneMnozstvi() {
         return `${this._pocetHodin} hod`;
     }
 }
-// Třída reprezentující použitý materiál (potomek PolozkaServisu)
+// Třída pro materiál (dědí z PolozkaServisu)
 class Material extends PolozkaServisu {
-    // Soukromé atributy pro množství a marži
+    // Proměnné pro kusy a marži
     _mnozstvi;
     _marze;
-    // Konstruktor třídy Material s validací množství a marže
+    // Konstruktor pro materiál s kontrolou množství a marže
     constructor(nazev, cenaKus, mnozstvi, marze) {
         super(nazev, cenaKus);
         if (mnozstvi <= 0) {
@@ -62,40 +62,41 @@ class Material extends PolozkaServisu {
         this._mnozstvi = mnozstvi;
         this._marze = marze;
     }
-    // Implementace výpočtu ceny pro materiál (cena * množství * marže)
+    // Výpočet výsledné ceny materiálu
     vypocitejCenu() {
         return this._zakladniCena * this._mnozstvi * this._marze;
     }
-    // Navrácení formátovaného množství včetně procentuální přirážky marže
+    // Formátování textu pro kusy a marži
     getFormatovaneMnozstvi() {
         const procentoMarze = Math.round((this._marze - 1) * 100);
         return `${this._mnozstvi} ks (marže ${procentoMarze}%)`;
     }
 }
-// Třída pro správu jedné zakázky konkrétního automobilu
+// Třída pro celou zakázku jednoho auta
 class Zakazka {
-    // Soukromé atributy instancí
+    // Název auta a pole pro uložení jeho položek
     _nazevAuta;
     _seznamPolozek = [];
+    // Konstruktor zakázky
     constructor(nazevAuta) {
         if (!nazevAuta || nazevAuta.trim() === "") {
             throw new Error("Název automobilu nesmí být prázdný.");
         }
         this._nazevAuta = nazevAuta;
     }
-    // Getter pro název auta
+    // Získání názvu auta
     getNazevAuta() {
         return this._nazevAuta;
     }
-    // Getter pro pole všech položek navázaných na auto
+    // Získání pole položek
     getSeznamPolozek() {
         return this._seznamPolozek;
     }
-    // Metoda pro přidání položky do pole servisu
+    // Přidání položky do pole
     pridatPolozku(polozka) {
         this._seznamPolozek.push(polozka);
     }
-    // Metoda pro výpočet sumy celé zakázky (Využití Polymorfismu)
+    // Výpočet celkové ceny všech položek v zakázce
     getCelkovaCena() {
         let celkem = 0;
         for (const polozka of this._seznamPolozek) {
@@ -103,7 +104,7 @@ class Zakazka {
         }
         return celkem;
     }
-    // Pomocná metoda, která vygeneruje textový seznam přidaných prací pro hlavní přehledovou tabulku
+    // Spojení názvů položek do jednoho textu pro tabulku
     getZjednodusenyPrehledUkonu() {
         if (this._seznamPolozek.length === 0) {
             return "Žádné zadané úkony";
@@ -111,18 +112,26 @@ class Zakazka {
         return this._seznamPolozek.map(p => p.getNazev()).join(", ");
     }
 }
-// --- LOGIKA ŘÍZENÍ APLIKACE A OPERACE NAD DOM ---
+// Pole pro uložení všech aut v systému
 const globalniSeznamZakazek = [];
+// Uchování indexu zrovna otevřeného auta
 let indexZobrazenehoAuta = -1;
+// Spuštění kódu po načtení stránky
 document.addEventListener("DOMContentLoaded", () => {
+    // Načtení HTML elementů do proměnných
     const formAuto = document.getElementById("form-auto");
     const formPolozka = document.getElementById("form-polozka");
     const vyberAutaPolozka = document.getElementById("vyber-auta-polozka");
-    // Kontejner pro výpis ucelených servisních balíčků
     const checkboxyUkony = document.getElementById("checkboxy-ukony");
     const vystupSeznamAut = document.getElementById("vystup-seznam-aut");
     const sekceDetailAuta = document.getElementById("sekce-detail-auta");
-    // Inicializační naplnění checkboxů z datového pole
+    const btnZavritDetail = document.getElementById("btn-zavrit-detail");
+    // Skrytí detailu auta
+    btnZavritDetail.addEventListener("click", () => {
+        sekceDetailAuta.classList.add("hidden");
+        indexZobrazenehoAuta = -1;
+    });
+    // Vytvoření checkboxů z dat v data.js
     if (typeof surovaDataZakazky !== "undefined" && Array.isArray(surovaDataZakazky)) {
         surovaDataZakazky.forEach((ukon, index) => {
             const label = document.createElement("label");
@@ -132,11 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
             checkbox.value = index.toString();
             checkbox.name = "polozka-ceniku";
             label.appendChild(checkbox);
-            // Výpis názvu úkonu pro uživatele
             label.appendChild(document.createTextNode(` ${ukon.nazevUkonu}`));
             checkboxyUkony.appendChild(label);
         });
     }
+    // Smazání auta z pole a překreslení
     function smazatZakazku(index) {
         const autoKeSmazani = globalniSeznamZakazek[index];
         const potvrzeni = confirm(`Opravdu chcete označit opravu vozidla "${autoKeSmazani.getNazevAuta()}" jako dokončenou a smazat ji ze systému?`);
@@ -152,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
             prekresliSystem();
         }
     }
+    // Překreslení hlavní tabulky a seznamu aut
     function prekresliSystem() {
         vyberAutaPolozka.innerHTML = '<option value="" disabled selected>-- Vyberte registrované auto --</option>';
         globalniSeznamZakazek.forEach((zakazka, index) => {
@@ -197,6 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+    // Zobrazení detailní tabulky s cenami
     function zobrazDetailKalkulaceAuta(index) {
         if (index < 0 || index >= globalniSeznamZakazek.length)
             return;
@@ -230,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         detailCelkovaCena.innerText = `${vybraneAuto.getCelkovaCena().toFixed(2)} Kč`;
         sekceDetailAuta.classList.remove("hidden");
     }
+    // Událost pro formulář přidání auta
     formAuto.addEventListener("submit", (e) => {
         e.preventDefault();
         const inputAutoNazev = document.getElementById("auto-nazev");
@@ -243,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Chyba při registraci vozidla: " + err.message);
         }
     });
-    // PŘEPRACOVANÉ: Čtení komplexních úkonů a automatické doplňování materiálu
+    // Událost pro formulář přidání položek
     formPolozka.addEventListener("submit", (e) => {
         e.preventDefault();
         const indexAuta = parseInt(vyberAutaPolozka.value);
@@ -258,14 +270,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const vybraneAuto = globalniSeznamZakazek[indexAuta];
         try {
-            // Projití všech vybraných úkonů z formuláře
             vybraneCheckboxy.forEach(checkbox => {
                 const indexCeniku = parseInt(checkbox.value);
                 const dataUkonu = surovaDataZakazky[indexCeniku];
-                // 1. Vytvoření a přidání objektu pro čistou PRÁCI
+                // Vytvoření práce
                 const novaPrace = new Prace(dataUkonu.prace.nazev, dataUkonu.prace.cena, dataUkonu.prace.hodiny);
                 vybraneAuto.pridatPolozku(novaPrace);
-                // 2. Cyklus pro automatické přidání veškerého navázaného MATERIÁLU
+                // Vytvoření materiálů
                 if (dataUkonu.material && dataUkonu.material.length > 0) {
                     dataUkonu.material.forEach((mat) => {
                         const novyMaterial = new Material(mat.nazev, mat.cena, mat.mnozstvi, mat.marze);
@@ -277,7 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (indexAuta === indexZobrazenehoAuta) {
                 zobrazDetailKalkulaceAuta(indexAuta);
             }
-            // Odškrtnutí po uložení
             vybraneCheckboxy.forEach(cb => cb.checked = false);
         }
         catch (err) {

@@ -109,6 +109,27 @@ const surovaDataZakazky = [
             { nazev: "Čisticí chemie a impregnace (sada)", cena: 350, mnozstvi: 1, marze: 1.4 }
         ]
     },
+      {
+        nazevUkonu: "Základní mytí karoserie a vysátí interiéru",
+        prace: { nazev: "Práce: Ruční mytí a vysávání", cena: 300, hodiny: 1 },
+        material: [
+            { nazev: "Autošampon a vosk (dávka)", cena: 80, mnozstvi: 1, marze: 1.2 }
+        ]
+    },
+    {
+        nazevUkonu: "Rychlá výměna předních stěračů",
+        prace: { nazev: "Práce: Demontáž a montáž gumiček", cena: 150, hodiny: 0.2 },
+        material: [
+            { nazev: "Přední stěrače (pár)", cena: 450, mnozstvi: 1, marze: 1.2 }
+        ]
+    },
+    {
+        nazevUkonu: "Kontrola a výměna prasklé pojistky",
+        prace: { nazev: "Práce: Proměření obvodu a výměna", cena: 200, hodiny: 0.3 },
+        material: [
+            { nazev: "Nožová pojistka 15A", cena: 15, mnozstvi: 1, marze: 2.0 }
+        ]
+    },
     // --- ÚKONY BEZ MATERIÁLU (ČISTÁ PRÁCE) ---
     {
         nazevUkonu: "Počítačová diagnostika elektroniky",
@@ -124,5 +145,10 @@ const surovaDataZakazky = [
         nazevUkonu: "Klempířské práce - oprava promáčklin",
         prace: { nazev: "Práce: Vyrovnání karoserie (PDR metoda)", cena: 1100, hodiny: 5 },
         material: []
-    }
+    },
+    {
+        nazevUkonu: "Dezinfekce interiéru ozonem",
+        prace: { nazev: "Práce: Čištění ozonovým generátorem", cena: 400, hodiny: 0.5 },
+        material: []
+    },
 ];

@@ -1,10 +1,10 @@
-// Abstraktní bázová třída pro položky servisu
+// Bázová abstraktní třída pro položky
 abstract class PolozkaServisu {
-    // Chráněné atributy třídy
+    // Chráněné proměnné pro název a základní cenu
     protected _nazev: string;
     protected _zakladniCena: number;
 
-    // Konstruktor s validací vstupních dat
+    // Konstruktor s kontrolou prázdného názvu a záporné ceny
     constructor(nazev: string, zakladniCena: number) {
         if (!nazev || nazev.trim() === "") {
             throw new Error("Název položky nesmí být prázdný.");
@@ -16,29 +16,27 @@ abstract class PolozkaServisu {
         this._zakladniCena = zakladniCena;
     }
 
-    // Veřejná metoda pro získání názvu
+    // Metoda pro získání názvu položky
     public getNazev(): string {
         return this._nazev;
     }
 
-    // Veřejná metoda pro získání základní jednotkové ceny
+    // Metoda pro získání základní ceny
     public getZakladniCena(): number {
         return this._zakladniCena;
     }
 
-    // Předpis abstraktní metody pro výpočet ceny
+    // Abstraktní metody, které musí obsahovat potomci
     public abstract vypocitejCenu(): number;
-
-    // Abstraktní metoda pro textové vyjádření množství/času v tabulce
     public abstract getFormatovaneMnozstvi(): string;
 }
 
-// Třída reprezentující odvedenou práci (potomek PolozkaServisu)
+// Třída pro práci (dědí z PolozkaServisu)
 class Prace extends PolozkaServisu {
-    // Soukromý atribut pro hodiny
+    // Proměnná pro počet odpracovaných hodin
     private _pocetHodin: number;
 
-    // Konstruktor třídy Prace s validací hodin
+    // Konstruktor pro práci s kontrolou hodin
     constructor(nazev: string, hodinovaSazba: number, pocetHodin: number) {
         super(nazev, hodinovaSazba);
         if (pocetHodin <= 0) {
@@ -47,24 +45,24 @@ class Prace extends PolozkaServisu {
         this._pocetHodin = pocetHodin;
     }
 
-    // Implementace výpočtu ceny pro práci (sazba * hodiny)
+    // Výpočet výsledné ceny práce
     public vypocitejCenu(): number {
         return this._zakladniCena * this._pocetHodin;
     }
 
-    // Navrácení formátovaného času
+    // Formátování textu pro hodiny
     public getFormatovaneMnozstvi(): string {
         return `${this._pocetHodin} hod`;
     }
 }
 
-// Třída reprezentující použitý materiál (potomek PolozkaServisu)
+// Třída pro materiál (dědí z PolozkaServisu)
 class Material extends PolozkaServisu {
-    // Soukromé atributy pro množství a marži
+    // Proměnné pro kusy a marži
     private _mnozstvi: number;
     private _marze: number;
 
-    // Konstruktor třídy Material s validací množství a marže
+    // Konstruktor pro materiál s kontrolou množství a marže
     constructor(nazev: string, cenaKus: number, mnozstvi: number, marze: number) {
         super(nazev, cenaKus);
         if (mnozstvi <= 0) {
@@ -77,24 +75,25 @@ class Material extends PolozkaServisu {
         this._marze = marze;
     }
 
-    // Implementace výpočtu ceny pro materiál (cena * množství * marže)
+    // Výpočet výsledné ceny materiálu
     public vypocitejCenu(): number {
         return this._zakladniCena * this._mnozstvi * this._marze;
     }
 
-    // Navrácení formátovaného množství včetně procentuální přirážky marže
+    // Formátování textu pro kusy a marži
     public getFormatovaneMnozstvi(): string {
         const procentoMarze = Math.round((this._marze - 1) * 100);
         return `${this._mnozstvi} ks (marže ${procentoMarze}%)`;
     }
 }
 
-// Třída pro správu jedné zakázky konkrétního automobilu
+// Třída pro celou zakázku jednoho auta
 class Zakazka {
-    // Soukromé atributy instancí
+    // Název auta a pole pro uložení jeho položek
     private _nazevAuta: string;
     private _seznamPolozek: PolozkaServisu[] = [];
 
+    // Konstruktor zakázky
     constructor(nazevAuta: string) {
         if (!nazevAuta || nazevAuta.trim() === "") {
             throw new Error("Název automobilu nesmí být prázdný.");
@@ -102,22 +101,22 @@ class Zakazka {
         this._nazevAuta = nazevAuta;
     }
 
-    // Getter pro název auta
+    // Získání názvu auta
     public getNazevAuta(): string {
         return this._nazevAuta;
     }
 
-    // Getter pro pole všech položek navázaných na auto
+    // Získání pole položek
     public getSeznamPolozek(): PolozkaServisu[] {
         return this._seznamPolozek;
     }
 
-    // Metoda pro přidání položky do pole servisu
+    // Přidání položky do pole
     public pridatPolozku(polozka: PolozkaServisu): void {
         this._seznamPolozek.push(polozka);
     }
 
-    // Metoda pro výpočet sumy celé zakázky (Využití Polymorfismu)
+    // Výpočet celkové ceny všech položek v zakázce
     public getCelkovaCena(): number {
         let celkem = 0;
         for (const polozka of this._seznamPolozek) {
@@ -126,7 +125,7 @@ class Zakazka {
         return celkem;
     }
 
-    // Pomocná metoda, která vygeneruje textový seznam přidaných prací pro hlavní přehledovou tabulku
+    // Spojení názvů položek do jednoho textu pro tabulku
     public getZjednodusenyPrehledUkonu(): string {
         if (this._seznamPolozek.length === 0) {
             return "Žádné zadané úkony";
@@ -135,24 +134,29 @@ class Zakazka {
     }
 }
 
-// --- LOGIKA ŘÍZENÍ APLIKACE A OPERACE NAD DOM ---
-
+// Pole pro uložení všech aut v systému
 const globalniSeznamZakazek: Zakazka[] = [];
+// Uchování indexu zrovna otevřeného auta
 let indexZobrazenehoAuta: number = -1;
 
+// Spuštění kódu po načtení stránky
 document.addEventListener("DOMContentLoaded", () => {
+    // Načtení HTML elementů do proměnných
     const formAuto = document.getElementById("form-auto") as HTMLFormElement;
     const formPolozka = document.getElementById("form-polozka") as HTMLFormElement;
-    
     const vyberAutaPolozka = document.getElementById("vyber-auta-polozka") as HTMLSelectElement;
-    
-    // Kontejner pro výpis ucelených servisních balíčků
     const checkboxyUkony = document.getElementById("checkboxy-ukony") as HTMLElement;
-    
     const vystupSeznamAut = document.getElementById("vystup-seznam-aut") as HTMLTableSectionElement;
     const sekceDetailAuta = document.getElementById("sekce-detail-auta") as HTMLElement;
+    const btnZavritDetail = document.getElementById("btn-zavrit-detail") as HTMLButtonElement;
 
-    // Inicializační naplnění checkboxů z datového pole
+    // Skrytí detailu auta
+    btnZavritDetail.addEventListener("click", () => {
+        sekceDetailAuta.classList.add("hidden");
+        indexZobrazenehoAuta = -1;
+    });
+
+    // Vytvoření checkboxů z dat v data.js
     if (typeof surovaDataZakazky !== "undefined" && Array.isArray(surovaDataZakazky)) {
         surovaDataZakazky.forEach((ukon: any, index: number) => {
             const label = document.createElement("label");
@@ -164,13 +168,13 @@ document.addEventListener("DOMContentLoaded", () => {
             checkbox.name = "polozka-ceniku";
             
             label.appendChild(checkbox);
-            // Výpis názvu úkonu pro uživatele
             label.appendChild(document.createTextNode(` ${ukon.nazevUkonu}`));
             
             checkboxyUkony.appendChild(label);
         });
     }
 
+    // Smazání auta z pole a překreslení
     function smazatZakazku(index: number): void {
         const autoKeSmazani = globalniSeznamZakazek[index];
         const potvrzeni = confirm(`Opravdu chcete označit opravu vozidla "${autoKeSmazani.getNazevAuta()}" jako dokončenou a smazat ji ze systému?`);
@@ -188,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Překreslení hlavní tabulky a seznamu aut
     function prekresliSystem(): void {
         vyberAutaPolozka.innerHTML = '<option value="" disabled selected>-- Vyberte registrované auto --</option>';
         globalniSeznamZakazek.forEach((zakazka, index) => {
@@ -238,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Zobrazení detailní tabulky s cenami
     function zobrazDetailKalkulaceAuta(index: number): void {
         if (index < 0 || index >= globalniSeznamZakazek.length) return;
         indexZobrazenehoAuta = index;
@@ -276,6 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sekceDetailAuta.classList.remove("hidden");
     }
 
+    // Událost pro formulář přidání auta
     formAuto.addEventListener("submit", (e) => {
         e.preventDefault();
         const inputAutoNazev = document.getElementById("auto-nazev") as HTMLInputElement;
@@ -283,6 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const novaZakazka = new Zakazka(inputAutoNazev.value);
             globalniSeznamZakazek.push(novaZakazka);
+            
             inputAutoNazev.value = "";
             prekresliSystem();
         } catch (err: any) {
@@ -290,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // PŘEPRACOVANÉ: Čtení komplexních úkonů a automatické doplňování materiálu
+    // Událost pro formulář přidání položek
     formPolozka.addEventListener("submit", (e) => {
         e.preventDefault();
 
@@ -310,16 +318,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const vybraneAuto = globalniSeznamZakazek[indexAuta];
 
         try {
-            // Projití všech vybraných úkonů z formuláře
             vybraneCheckboxy.forEach(checkbox => {
                 const indexCeniku = parseInt(checkbox.value);
                 const dataUkonu = surovaDataZakazky[indexCeniku];
 
-                // 1. Vytvoření a přidání objektu pro čistou PRÁCI
+                // Vytvoření práce
                 const novaPrace = new Prace(dataUkonu.prace.nazev, dataUkonu.prace.cena, dataUkonu.prace.hodiny);
                 vybraneAuto.pridatPolozku(novaPrace);
 
-                // 2. Cyklus pro automatické přidání veškerého navázaného MATERIÁLU
+                // Vytvoření materiálů
                 if (dataUkonu.material && dataUkonu.material.length > 0) {
                     dataUkonu.material.forEach((mat: any) => {
                         const novyMaterial = new Material(mat.nazev, mat.cena, mat.mnozstvi, mat.marze);
@@ -334,7 +341,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 zobrazDetailKalkulaceAuta(indexAuta);
             }
 
-            // Odškrtnutí po uložení
             vybraneCheckboxy.forEach(cb => cb.checked = false);
 
         } catch (err: any) {
