@@ -1,4 +1,4 @@
-/* ZÁKLADNÍ NASTAVENÍ A NOVÝ FONT */
+/* ZÁKLADNÍ NASTAVENÍ*/
 * {
     box-sizing: border-box;
     margin: 0;
@@ -299,9 +299,7 @@ tr:hover {
     display: none !important;
 }
 
-/* =========================================================
-   RESPONZIVNÍ DESIGN PRO MOBILNÍ ZAŘÍZENÍ (Max šířka 768px)
-   ========================================================= */
+/* RESPONZIVNÍ DESIGN PRO MOBILNÍ ZAŘÍZENÍ (Max šířka 768px) */
 @media (max-width: 768px) {
     /* Zmenšení okrajů na malých obrazovkách */
     body {
