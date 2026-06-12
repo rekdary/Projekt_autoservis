@@ -50,13 +50,12 @@ header .subtitle {
     }
 }
 
-/* KARTY (FORMULÁŘE A TABULKY) - Jednoduchý plochý styl bez stínů */
+/* KARTY (FORMULÁŘE A TABULKY) */
 .card {
     background-color: #ffffff;
     padding: 25px;
     border-radius: 0px; 
     border: 2px solid #292524;
-    /* Stín byl odstraněn pro přirozenější vzhled školního projektu */
     margin-bottom: 25px;
 }
 
@@ -122,7 +121,7 @@ button:hover {
 
 /* VZHLED TABULEK */
 .table-wrapper {
-    overflow-x: auto;
+    overflow-x: auto; /* Zajišťuje scrollování tabulky do strany na mobilech */
 }
 
 table {
@@ -219,6 +218,8 @@ tr:hover {
     font-weight: bold;
     text-transform: uppercase;
     border: 1px solid;
+    display: inline-block;
+    text-align: center;
 }
 
 .badge-prace {
@@ -296,4 +297,63 @@ tr:hover {
 
 .hidden {
     display: none !important;
+}
+
+/* =========================================================
+   RESPONZIVNÍ DESIGN PRO MOBILNÍ ZAŘÍZENÍ (Max šířka 768px)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Zmenšení okrajů na malých obrazovkách */
+    body {
+        padding: 10px;
+    }
+
+    /* Zmenšení hlavního nadpisu */
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    header .subtitle {
+        font-size: 0.9rem;
+    }
+
+    /* Zmenšení vnitřních mezer na kartách */
+    .card {
+        padding: 15px;
+    }
+
+    .card h2 {
+        margin: -15px -15px 15px -15px;
+        padding: 12px 15px;
+        font-size: 1rem;
+    }
+
+    /* Přeskládání tlačítek v tabulce pod sebe, aby netrhala design */
+    .akce-tlacitka {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-small, .btn-danger {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Přeuspořádání boxu s celkovou cenou pod sebe */
+    .celkova-cena-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        padding: 15px;
+    }
+
+    .celkova-cena-box strong {
+        font-size: 1.5rem;
+    }
+
+    /* Zmenšení textu v tabulkách pro mobily */
+    th, td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
 }
