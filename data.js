@@ -118,7 +118,7 @@ const surovaDataZakazky = [
         ]
     },
     {
-        nazevUkonu: "Rychlá výměna předních stěračů",
+        nazevUkonu: "Výměna předních stěračů",
         prace: { nazev: "Práce: Demontáž a montáž gumiček", cena: 150, hodiny: 0.2 },
         material: [
             { nazev: "Přední stěrače (pár)", cena: 450, mnozstvi: 1, marze: 1.2 }
